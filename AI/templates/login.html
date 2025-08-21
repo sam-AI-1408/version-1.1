@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login - SAM AI</title>
+  <style>
+    body {
+      background-color: #0d0d0d;
+      color: #00ffff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 100px;
+    }
+    form {
+      display: inline-block;
+      background-color: #1a1a1a;
+      padding: 30px;
+      border-radius: 10px;
+      border: 1px solid #00ffff;
+    }
+    input {
+      padding: 10px;
+      margin: 10px;
+      width: 220px;
+      border: none;
+      border-radius: 5px;
+      background-color: #333;
+      color: #00ffff;
+    }
+    button[type="submit"] {
+      padding: 10px 20px;
+      margin-top: 10px;
+      background-color: #00ffff;
+      color: black;
+      cursor: pointer;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+    }
+    button[type="submit"]:hover { background-color: #00cccc; }
+    .error { color: red; margin-top: 10px; }
+    a { color: #00ffff; text-decoration: none; font-size: 14px; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Login to SAM AI</h1>
+
+  <form method="post" action="/login" id="loginForm" autocomplete="on">
+    <input name="username" type="text" placeholder="Enter Username" autocomplete="username" required />
+    <br />
+    <input name="password" type="password" placeholder="Enter Password" autocomplete="current-password" required />
+    <br />
+    <button type="submit">Login</button>
+
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <div style="margin-top:12px">
+      <a href="{{ url_for('register') }}">Don't have an account? Register</a>
+    </div>
+  </form>
+
+  <!-- DEV: tiny client-side debug — remove in production -->
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      // Log what will be sent to network (for debugging only)
+      const u = this.querySelector('input[name="username"]').value;
+      const p = this.querySelector('input[name="password"]').value;
+      console.log("Login form submit — username:", JSON.stringify(u), "password present:", !!p);
+      // allow normal submit to proceed
+    });
+  </script>
+</body>
+</html>

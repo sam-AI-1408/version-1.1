@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sam AI Intro</title>
+  <style>
+    body {
+      background-color: #0a0f1c;
+      color: #00f0ff;
+      font-family: 'Courier New', monospace;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1100px;
+      width: 100%;
+      padding: 20px;
+      gap: 20px;
+    }
+
+    .text {
+      flex: 1;
+      font-size: 18px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      border-right: 3px solid #00f0ff;
+      overflow: hidden;
+      animation: blink 0.7s infinite;
+    }
+
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+
+    .image {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .image img {
+      width: 100%;
+      max-width: 400px; /* prevents image from getting too large */
+      min-width: 250px; /* prevents image from shrinking too much */
+      height: auto;
+    }
+
+    /* Popup overlay */
+    .popup-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .popup {
+      background: #111827;
+      padding: 100px;
+      text-align: center;
+      color: #00f0ff;
+      border-radius: 10px;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .popup h2 {
+      margin-bottom: 200px;
+      font-size: 20px;
+    }
+
+    .popup button {
+      background: #00f0ff;
+      color: #0a0f1c;
+      border: none;
+      padding: 25px 40px;
+      margin: 40px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+
+    .popup button:hover {
+      background: #00bcd4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="mainContent">
+    <div id="typingText" class="text"></div>
+    <div class="image">
+      <img src="wp10311792.png" alt="Sung Jinwoo">
+    </div>
+  </div>
+
+  <!-- Popup -->
+  <div class="popup-overlay" id="popup">
+    <div class="popup">
+      <h2>Will you accept to be a Player of the System?</h2>
+      <button onclick="acceptPlayer()">Yes</button>
+      <button onclick="declinePlayer()">No</button>
+    </div>
+  </div>
+
+  <script>
+    const text = "Welcome to Sam AI — Your personal AI system.\n\nI am the shadow guide who will assist you in your journey.\nHere you will track tasks, academics, and quests to grow stronger each day.\n\nAre you ready to rise?";
+    let index = 0;
+    const speed = 80; // slower typing speed
+    const typingElement = document.getElementById("typingText");
+
+    function typeWriter() {
+      if (index < text.length) {
+        typingElement.innerHTML += text.charAt(index);
+        index++;
+        setTimeout(typeWriter, speed);
+      } else {
+        setTimeout(() => {
+          document.getElementById("mainContent").style.display = "none";
+          document.getElementById("popup").style.display = "flex";
+        }, 1000);
+      }
+    }
+
+    function acceptPlayer() {
+      alert("You are now a Player of the System!");
+    }
+
+    function declinePlayer() {
+      alert("You declined the System.");
+    }
+
+    window.onload = typeWriter;
+  </script>
+</body>
+</html>

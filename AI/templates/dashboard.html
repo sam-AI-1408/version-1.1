@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sam AI — Dashboard</title>
+  <style>
+    :root{
+      --bg:#050615; --panel:#0f1630; --accent:#00d0ff; --muted:#9fb2c4;
+      --card:#0a1224; --glass: rgba(255,255,255,0.03); --radius:14px;
+    }
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#030414 0%, #071028 100%);font-family:Inter, "Segoe UI", Roboto, sans-serif;color:#dff7ff}
+    .app{display:grid;grid-template-columns:260px 1fr;gap:24px;padding:28px;height:100vh;box-sizing:border-box}
+    .sidebar{background:linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.15));border-radius:var(--radius);padding:18px;box-shadow:0 10px 30px rgba(0,0,0,0.6);display:flex;flex-direction:column;gap:18px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#4fe6ff);display:flex;align-items:center;justify-content:center;color:#012;font-weight:700;}
+    .brand h1{font-size:16px;margin:0}
+    nav{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+    .nav-item{padding:10px 12px;border-radius:10px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:10px}
+    .nav-item.active, .nav-item:hover{background:linear-gradient(90deg, rgba(0,208,255,0.06), rgba(0,208,255,0.03));color:var(--accent)}
+    .sidebar .logout{margin-top:auto;padding:10px;border-radius:10px;background:transparent;color:#ff8fa3;text-align:center;cursor:pointer}
+    .main{display:grid;grid-template-rows:auto 1fr;gap:18px}
+    .top-row{display:flex;gap:18px;align-items:stretch}
+    .profile-card{background:linear-gradient(180deg, rgba(0,0,0,0.35), rgba(255,255,255,0.02));width:360px;padding:18px;border-radius:16px;display:flex;gap:16px;align-items:center}
+    .avatar{width:92px;height:92px;border-radius:14px;background:linear-gradient(135deg,#004d6b,#00d0ff);display:flex;align-items:center;justify-content:center;font-size:32px;color:#001;}
+    .profile-info{flex:1}
+    .profile-info h2{margin:0 0 4px 0;font-size:20px}
+    .profile-meta{color:var(--muted);font-size:13px;margin-bottom:8px}
+    .level-pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(0,208,255,0.06);color:var(--accent);font-weight:600}
+    .points {margin-top:8px;background:linear-gradient(90deg, rgba(0,208,255,0.03), rgba(255,255,255,0.01));padding:8px;border-radius:10px;font-size:14px;color:var(--muted)}
+    .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+    .widget{background:var(--card);padding:16px;border-radius:12px;flex:1}
+    .content{display:grid;grid-template-columns: 1fr 420px;gap:18px;align-items:start}
+    .panel{background:var(--panel);padding:18px;border-radius:12px}
+    .panel h2{margin-top:0;color:var(--accent)}
+    .task{background:linear-gradient(90deg, rgba(0,208,255,0.02), rgba(255,255,255,0.01));padding:10px;border-radius:10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+    input[type="text"], input[type="number"], textarea, select {width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#dff7ff;box-sizing:border-box;margin-top:8px}
+    button.btn{background:linear-gradient(90deg,var(--accent),#4fe6ff);border:none;padding:10px 14px;border-radius:10px;color:#001;font-weight:700;cursor:pointer;margin-top:8px}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--accent)}
+    .right-col{display:flex;flex-direction:column;gap:12px}
+    .progress {height:14px;background:rgba(255,255,255,0.05);border-radius:999px;overflow:hidden}
+    .progress > i {display:block;height:100%;background:linear-gradient(90deg,var(--accent),#4fe6ff);}
+    footer.small{font-size:12px;color:var(--muted);padding:10px;text-align:center}
+    @media (max-width:980px){.app{grid-template-columns:1fr;padding:14px}.content{grid-template-columns:1fr}.sidebar{flex-direction:row;overflow:auto;padding:10px}.sidebar .logout{display:none}}
+    .small-muted{color:var(--muted);font-size:13px}
+    .loading {opacity:0.6;pointer-events:none}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" role="navigation">
+      <div class="brand">
+        <div class="logo">Sam</div>
+        <div>
+          <h1>Sam AI</h1>
+          <div class="small-muted">Solo-leveling dashboard</div>
+        </div>
+      </div>
+
+      <nav>
+        <div class="nav-item active" data-view="profile">👤 Profile</div>
+        <div class="nav-item" data-view="tasks">📝 Tasks</div>
+        <div class="nav-item" data-view="academic">📚 Academic</div>
+        <div class="nav-item" data-view="quests">🎯 Quests</div>
+      </nav>
+
+      <form action="{{ url_for('logout') }}" method="get" style="margin-top:auto">
+        <button type="submit" class="sidebar logout">Logout</button>
+      </form>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div class="top-row">
+        <div class="profile-card" aria-live="polite">
+          <div class="avatar" id="avatar-initials">{{ (username[0:2] if username else 'SA')|upper }}</div>
+          <div class="profile-info">
+            <h2 id="profile-name">{{ username }}</h2>
+            <div class="profile-meta">Novice Scholar • <span class="level-pill" id="profile-level">{{ xp and level or level }}</span></div>
+            <div class="points">Points: <strong id="points">{{ xp }}</strong></div>
+
+            <div class="stats-grid">
+              <div class="stat">
+                <h4>Strength</h4>
+                <p id="stat-strength">5</p>
+              </div>
+              <div class="stat">
+                <h4>Growth</h4>
+                <p id="stat-growth">12</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="widgets">
+          <div class="widget">
+            <h3>Daily XP</h3>
+            <p class="small-muted">Earned today</p>
+            <div style="margin-top:12px">
+              <div class="progress"><i id="daily-progress" style="width:0%"></i></div>
+              <div id="daily-progress-label" style="margin-top:8px;color:var(--muted)">0 / 100 XP</div>
+            </div>
+          </div>
+
+          <div class="widget">
+            <h3>Quick Add</h3>
+            <form id="quick-task-form">
+              <input type="text" id="quick-title" placeholder="Task title" required>
+              <button class="btn" type="submit">Add</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- content -->
+      <div class="content">
+        <section class="panel" id="panel-left">
+          <!-- PROFILE view -->
+          <div data-view-panel="profile" class="view">
+            <h2>Profile</h2>
+            <p>Welcome back, <strong id="profile-welcome">{{ username }}</strong>. Your total XP is <strong id="profile-xp">{{ xp }}</strong>.</p>
+          </div>
+
+          <!-- TASKS view -->
+          <div data-view-panel="tasks" class="view" style="display:none">
+            <h2>Tasks</h2>
+            <form id="task-form">
+              <input type="text" id="task-title" placeholder="Task title" required>
+              <input type="text" id="task-desc" placeholder="Short description">
+              <button class="btn" type="submit">Add Task</button>
+            </form>
+
+            <hr style="border:none;height:12px">
+
+            <div id="tasks-list" aria-live="polite"></div>
+          </div>
+
+          <!-- ACADEMIC view -->
+          <div data-view-panel="academic" class="view" style="display:none">
+            <h2>Academic</h2>
+            <form id="academic-form">
+              <input type="text" id="subject" placeholder="Subject (e.g., Math)" required>
+              <input type="number" id="hours" placeholder="Hours studied" min="0.1" step="0.1" required>
+              <button class="btn" type="submit">Log Study</button>
+            </form>
+
+            <hr>
+
+            <div id="study-list" aria-live="polite"></div>
+          </div>
+
+          <!-- QUESTS view -->
+          <div data-view-panel="quests" class="view" style="display:none">
+            <h2>Quests</h2>
+            <p class="small-muted">Daily, Weekly & Monthly quests to earn XP</p>
+
+            <div class="task">
+              <div>
+                <strong>Study 1 hour</strong>
+                <div class="small-muted">Reward: 10 XP</div>
+              </div>
+              <div><button class="btn ghost" data-quest="Study 1 hour">Accept</button></div>
+            </div>
+
+            <div class="task">
+              <div>
+                <strong>Complete 3 tasks</strong>
+                <div class="small-muted">Reward: 30 XP</div>
+              </div>
+              <div><button class="btn ghost" data-quest="Complete 3 tasks">Accept</button></div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- RIGHT column summary -->
+        <aside class="right-col">
+          <div class="panel">
+            <h2>Today</h2>
+            <p class="small-muted">Quick summary of today's progress</p>
+            <ul id="today-summary" style="padding-left:18px;color:var(--muted)">
+              <li>Tasks completed: <strong id="today-completed">0</strong></li>
+              <li>Hours studied: <strong id="today-hours">0</strong></li>
+              <li>XP earned: <strong id="today-xp">0</strong></li>
+            </ul>
+          </div>
+
+          <div class="panel">
+            <h2>Leaderboard</h2>
+            <p class="small-muted">Top students (mock)</p>
+            <ol style="margin:8px 0 0 18px;color:var(--muted)">
+              <li>Ali — 520 XP</li>
+              <li>Mina — 480 XP</li>
+              <li>You — <span style="color:var(--accent)" id="leader-you">{{ xp }}</span></li>
+            </ol>
+          </div>
+
+          <div class="panel" style="text-align:center">
+            <h3>Export</h3>
+            <button class="btn ghost" id="export-btn">Download CSV</button>
+            <footer class="small">Sam AI • dashboard</footer>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <!-- Embed initial state server-side so frontend can render immediately -->
+  <script>
+     window.__INITIAL_STATE__ = {
+      user: {{ {"username": username}|tojson }},
+      stats: {{ {"xp": xp, "level": level}|tojson }},
+      tasks: {{ tasks|tojson }},
+      academics: {{ academics|tojson }}
+     }
+  </script>
+
+  <!-- Small UI wiring used until your full static/app.js is loaded -->
+  <script>
+    (function(){
+      // nav switching
+      document.querySelectorAll('.nav-item').forEach(item=>{
+        item.addEventListener('click', ()=>{
+          document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+          item.classList.add('active');
+          const view = item.dataset.view;
+          document.querySelectorAll('[data-view-panel]').forEach(panel=>{
+            panel.style.display = (panel.dataset.viewPanel === view) ? 'block' : 'none';
+          });
+        });
+      });
+
+      // quick UI hook for quest accept buttons (delegates to app.js later)
+      document.querySelectorAll('button[data-quest]').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          const title = btn.getAttribute('data-quest');
+          // will be handled by static/app.js if present; otherwise optimistic UI:
+          alert('Quest accepted: ' + title + ' (will award XP when backend connected)');
+        });
+      });
+
+      // export CSV
+      document.getElementById('export-btn').addEventListener('click', ()=>{
+        // delegate to static/app.js if present, but fallback to simple export of initial arrays
+        const tasks = window.__INITIAL_STATE__.tasks || [];
+        const academics = window.__INITIAL_STATE__.academics || [];
+        const rows = [['Type','Title/Subject','Value','Date']];
+        tasks.forEach(t=>rows.push(['task', t.title || '', t.description || '', '']));
+        academics.forEach(a=>rows.push(['study', a.subject || '', a.hours || '', a.date || '']));
+        const csv = rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+        const blob = new Blob([csv], {type:'text/csv'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download='sam-ai-data.csv'; a.click();
+        URL.revokeObjectURL(url);
+      });
+    })();
+  </script>
+<script>
+  window.__INITIAL_STATE__ = {{ state | tojson }};
+</script>
+
+  <!-- Your main frontend logic (replace/augment with the app.js you'll paste) -->
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
